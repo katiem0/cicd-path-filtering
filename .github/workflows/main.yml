@@ -1,0 +1,58 @@
+name: Main workflow
+
+on:
+  pull_request:
+    branches: # PRs to the following branches will trigger the workflow
+      - main
+jobs:
+  # JOB to run change detection
+  changes:
+    runs-on: ubuntu-latest
+    # Required permissions
+    permissions:
+      pull-requests: read
+    # Set job outputs to values from filter step
+    outputs:
+      modulea: ${{ steps.filter.outputs.modulea }}
+      moduleb: ${{ steps.filter.outputs.moduleb }}
+      modulec: ${{ steps.filter.outputs.modulec }}
+    steps:
+    - uses: actions/checkout@v4
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          modulea:
+            - 'modules/module-a/**'
+          moduleb:
+            - 'modules/module-b/**'
+          modulec:
+            - 'modules/module-c/**'
+
+  # JOB to build and test module a
+  module-a:
+    needs: changes
+    if: ${{ needs.changes.outputs.modulea == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "module A job running"
+
+  # JOB to build and test module b
+  module-b:
+    needs: changes
+    if: ${{ needs.changes.outputs.moduleb == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "module B job running"
+
+  # JOB to build and test module c
+  module-c:
+    needs: changes
+    if: ${{ needs.changes.outputs.modulec == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "module C job running"
